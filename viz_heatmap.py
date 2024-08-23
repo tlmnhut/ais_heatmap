@@ -177,8 +177,10 @@ def overlay_prediction_ground_truth(proxy_heatmap, predict_heatmap, rgb_image):
         tn, fp, fn, tp = confusion_matrix(proxy_heatmap_filter.flatten(), predict_heatmap_filter.flatten()).ravel()
         relative_risk.append((tp / (tp + fn)) / (fp / (fp + tn)))
 
-        contour_proxy_heatmap = np.array(Image.fromarray(proxy_heatmap_filter).filter(ImageFilter.FIND_EDGES))
-        contour_predict_heatmap = np.array(Image.fromarray(predict_heatmap_filter).filter(ImageFilter.FIND_EDGES))
+        contour_proxy_heatmap = np.array(Image.fromarray(proxy_heatmap_filter).filter(
+            ImageFilter.FIND_EDGES).filter(ImageFilter.MaxFilter(3)))
+        contour_predict_heatmap = np.array(Image.fromarray(predict_heatmap_filter).filter(
+            ImageFilter.FIND_EDGES).filter(ImageFilter.MaxFilter(3)))
         contours.append(contour_proxy_heatmap)
         contours.append(contour_predict_heatmap)
 
@@ -199,7 +201,7 @@ def viz_grid_heatmap():
     trained_dataset = 'ecoset'
     dataset_names = ['animals', 'automobiles', 'fruits', 'furniture', 'various', 'vegetables']
     selected_img = [['stim-0793.png', 'stim-0976.png', 'stim-0007.png', 'stim-0906.png'],
-                    ['elevator2.jpg', 'tractor3.jpg', 'raft4.jpg', 'truck6.jpg'],
+                    ['elevator2.jpg', 'tractor3.jpg', 'boat4.jpg', 'truck6.jpg'],
                     ['ackee2.png', 'durian2.png', 'pineapple6.png', 'passionfruit6.png'],
                     ['cupboard-03.jpg', 'coffee-table-01.jpg', 'coffee-table-03.jpg', 'coffee-table-07.jpg'],
                     ['artificialobject8.jpg', 'artificialobject3.jpg', 'naturalobject23.jpg', 'humanbody5.jpg'],
@@ -208,7 +210,7 @@ def viz_grid_heatmap():
     fig, axs = plt.subplots(4, 6, figsize=(12, 8))
     for dataset in range(6):
         for img in range(4):
-            heatmap_path = f'./figures/{trained_dataset}/remove_individual/{dataset_names[dataset]}/' +\
+            heatmap_path = f'./figures/{trained_dataset}/remove_fm/{dataset_names[dataset]}/' +\
                            selected_img[dataset][img]
             heatmap_img = Image.open(heatmap_path)
             heatmap_img = heatmap_img.resize((300, 300))
@@ -224,15 +226,15 @@ def viz_grid_heatmap():
         axs[0, dataset].set_title(f"{dataset_names[dataset].replace('automobiles', 'transportation')}".capitalize(),
                                   fontsize=13)
     plt.tight_layout()
-    plt.savefig('./figures/grid_tmp.png')
+    plt.savefig('./figures/august2024/aim_2_heatmaps.png')
 
 
 def viz_grid_overlap():
     trained_dataset = 'ecoset'
-    selected_img = [f'./figures/{trained_dataset}/remove_individual/overlap_quant/animals/stim-0793.png',
-                    f'./figures/{trained_dataset}/remove_individual/overlap_quant/automobiles/elevator2.jpg',
-                    f'./figures/{trained_dataset}/remove_individual/overlap_quant/animals/stim-0906.png',
-                    f'./figures/{trained_dataset}/remove_individual/overlap_quant/automobiles/truck6.jpg',
+    selected_img = [f'./figures/{trained_dataset}/remove_fm/overlap_quant/animals/stim-0793.png',
+                    f'./figures/{trained_dataset}/remove_fm/overlap_quant/automobiles/elevator2.jpg',
+                    f'./figures/{trained_dataset}/remove_fm/overlap_quant/animals/stim-0906.png',
+                    f'./figures/{trained_dataset}/remove_fm/overlap_quant/automobiles/truck6.jpg',
     ]
     fig, axs = plt.subplots(1, 4, figsize=(12, 3))
     axs_flat = axs.flatten()
@@ -242,7 +244,7 @@ def viz_grid_overlap():
         axs_flat[i].imshow(overlap_img)
         axs_flat[i].axis('off')
     plt.tight_layout()
-    plt.savefig('./figures/grid_overlap.png')
+    plt.savefig('./figures/august2024/aim_3_overlap.png')
 
 
 if __name__ == '__main__':
@@ -340,37 +342,37 @@ if __name__ == '__main__':
     #     rr_list = np.array(rr_list)
     #     print(dataset, rr_list.mean(axis=0), rr_list.std(axis=0))
 
-
+    # new here
     # trained_dataset = 'ecoset'
     # dataset_names = ['animals', 'automobiles', 'fruits', 'furniture', 'various', 'vegetables']
     # # r2_original = np.load(f'./res/corr/{trained_dataset}/original/all_datasets.npy')
     # rr_list_all = []
     # for dataset in dataset_names:
-    #     # r2_remove = np.load(f'./res/corr/{trained_dataset}/remove/{dataset}.npy')
+    #     pert_scores = np.load(f'./res/scores/{trained_dataset}/remove_fm/{dataset}_pert_scores.npy')
     #     # r2_perturbation = r2_original[dataset_names.index(dataset)] - r2_remove
-    #     # r2_perturbation = r2_perturbation * (r2_perturbation > 0)
-    #     # heatmap_scores = r2_perturbation / sum(r2_perturbation)
+    #     pert_scores = pert_scores * (pert_scores > 0)
+    #     heatmap_scores = pert_scores / pert_scores.sum(axis=1)[:, np.newaxis]
     #
-    #     # feature_maps = np.load(f'./res/acts/{trained_dataset}/original/vgg16_peterson_{dataset}_last_conv.npy')
+    #     feature_maps = np.load(f'./res/acts/{trained_dataset}/original/vgg16_peterson_{dataset}_last_conv.npy')
     #     # heatmap_scores = np.load(f'./res/scores/{trained_dataset}/remove_individual/{dataset}.npy')
-    #     # heatmap_collection = []
-    #     # for i in range(feature_maps.shape[0]):
-    #     #     heatmap = compute_heatmap(feature_maps=feature_maps[i], scores=heatmap_scores[i]) # i on heatmap_scores or not
-    #     #     heatmap_collection.append(heatmap)
-    #     # np.save(f'./res/heatmaps/{trained_dataset}/remove_individual/{dataset}', np.array(heatmap_collection))
+    #     heatmap_collection = []
+    #     for i in range(feature_maps.shape[0]):
+    #         heatmap = compute_heatmap(feature_maps=feature_maps[i], scores=heatmap_scores[i]) # i on heatmap_scores or not
+    #         heatmap_collection.append(heatmap)
+    #     np.save(f'./res/heatmaps/{trained_dataset}/remove_fm/{dataset}', np.array(heatmap_collection))
     #
-    #     # image_path_list = sorted(list(pathlib.Path(f"./data/peterson/original/{dataset}/images/").glob("*")))
-    #     # heatmap_collection = np.load(f'./res/heatmaps/{trained_dataset}/remove_individual/{dataset}.npy')
-    #     # save_dir = f'./figures/{trained_dataset}/remove_individual/{dataset}/'
-    #     # pathlib.Path(save_dir).mkdir(parents=True, exist_ok=True)
-    #     # visualize_heatmap(img_path_list=image_path_list,
-    #     #                   heatmap_collection=heatmap_collection,
-    #     #                   save_dir=save_dir)
-    #
+    #     image_path_list = sorted(list(pathlib.Path(f"./data/peterson/original/{dataset}/images/").glob("*")))
+    #     heatmap_collection = np.load(f'./res/heatmaps/{trained_dataset}/remove_fm/{dataset}.npy')
+    #     save_dir = f'./figures/{trained_dataset}/remove_fm/{dataset}/'
+    #     pathlib.Path(save_dir).mkdir(parents=True, exist_ok=True)
+    #     visualize_heatmap(img_path_list=image_path_list,
+    #                       heatmap_collection=heatmap_collection,
+    #                       save_dir=save_dir)
+
     #     proxy_heatmap_list = np.load(f"./data/peterson/transalnet_dense/sal_mat/{dataset}.npy")
-    #     my_heatmap_list = np.load(f'./res/heatmaps/{trained_dataset}/remove_individual/{dataset}.npy')
+    #     my_heatmap_list = np.load(f'./res/heatmaps/{trained_dataset}/remove_fm/{dataset}.npy')
     #     img_list = sorted(list(pathlib.Path(f'./data/peterson/original/{dataset}/images').glob('*')))
-    #     pathlib.Path(f'./figures/{trained_dataset}/remove_individual/overlap_quant/{dataset}/').mkdir(parents=True, exist_ok=True)
+    #     pathlib.Path(f'./figures/{trained_dataset}/remove_fm/overlap_quant/{dataset}/').mkdir(parents=True, exist_ok=True)
     #     rr_list = []
     #     for idx in range(len(my_heatmap_list)):
     #         proxy_heatmap = proxy_heatmap_list[idx]
@@ -378,7 +380,7 @@ if __name__ == '__main__':
     #         rgb_image = Image.open(img_list[idx])
     #         overlaid_img, relative_risk = overlay_prediction_ground_truth(proxy_heatmap=proxy_heatmap,
     #                                                        predict_heatmap=my_heatmap, rgb_image=rgb_image)
-    #         rgb_image.save(f'./figures/{trained_dataset}/remove_individual/overlap_quant/{dataset}/' + img_list[idx].name)
+    #         rgb_image.save(f'./figures/{trained_dataset}/remove_fm/overlap_quant/{dataset}/' + img_list[idx].name)
     #         rr_list.append(relative_risk)
     #     rr_list_all.append(rr_list)
     #     rr_list = np.array(rr_list)
@@ -386,5 +388,5 @@ if __name__ == '__main__':
     # rr_list_all = np.vstack(np.array(rr_list_all))
     # print(np.round(rr_list_all.mean(axis=0), 2), np.round(rr_list_all.std(axis=0), 2))
 
-    viz_grid_overlap()
-    # viz_grid_heatmap()
+    # viz_grid_overlap()
+    viz_grid_heatmap()

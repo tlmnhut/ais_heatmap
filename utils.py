@@ -2,6 +2,7 @@ import pathlib
 import cv2
 import numpy as np
 from scipy.io import loadmat
+from scipy.stats import spearmanr
 from PIL import Image
 from sklearn import metrics
 from sklearn.cluster import DBSCAN
@@ -106,6 +107,20 @@ def pearsonr_2d(x, y):
     lower = np.sqrt(np.sum(np.power(x - np.mean(x), 2)) * np.sum(np.power(y - np.mean(y, axis=1)[:, None], 2), axis=1))
     pearson_r = upper / lower
     return pearson_r
+
+
+def spearman_2d(vec, mat):
+    rho_list = []
+    for row in mat:
+        rho_list.append(spearmanr(vec, row)[0])
+    return np.array(rho_list)
+
+
+def cosine_sim_2d(vec, mat):
+    # credit: https://stackoverflow.com/a/52048673
+    mat_norm = np.linalg.norm(mat, axis=1)
+    vec_norm = np.linalg.norm(vec)
+    return (mat @ vec) / (mat_norm * vec_norm)
 
 
 def measure_overlap_heatmap():
